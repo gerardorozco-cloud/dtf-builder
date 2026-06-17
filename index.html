@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Constructor de gang sheet DTF</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section id="startModal" class="start-modal" aria-label="Opciones iniciales">
+      <div class="start-dialog">
+        <header class="start-header">
+          <h2>Bienvenido al builder</h2>
+          <button id="closeStartModal" type="button" aria-label="Cerrar">×</button>
+        </header>
+        <div class="start-grid">
+          <button id="startAutoBtn" class="start-card" type="button">
+            <span class="start-art art-auto"></span>
+            <strong>Auto build</strong>
+            <span>Subir varias imagenes y anidar automaticamente</span>
+          </button>
+          <button id="startManualBtn" class="start-card" type="button">
+            <span class="start-art art-manual"></span>
+            <strong>Manual build</strong>
+            <span>Subir una imagen a la vez y acomodar manualmente</span>
+          </button>
+          <button id="startEditBtn" class="start-card" type="button">
+            <span class="start-art art-edit"></span>
+            <strong>Editar pedido anterior</strong>
+            <span>Recuperar el ultimo borrador en este dispositivo</span>
+          </button>
+          <button id="startNamesBtn" class="start-card" type="button">
+            <span class="start-art art-names"></span>
+            <strong>Nombres y numeros</strong>
+            <span>Crear texto editable para playeras o uniformes</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="Panel de configuracion">
+        <section class="brand-block">
+          <div>
+            <p class="eyebrow">Print Studio</p>
+            <h1>Builder de impresion</h1>
+          </div>
+          <span class="status-pill">Listo</span>
+        </section>
+
+        <section class="panel">
+          <h2>Servicio</h2>
+          <label>
+            Tipo de trabajo
+            <select id="serviceMode">
+              <option value="dtf">DTF - Mimaki TxF300</option>
+              <option value="sublimation">Sublimacion - Mimaki TS100</option>
+              <option value="epson_a4">Sublimacion A4 - Epson F170</option>
+            </select>
+          </label>
+          <div id="sublimationOptions" class="service-options" hidden>
+            <label>
+              Papel
+              <select id="paperWidth">
+                <option value="110">Papel 110 cm</option>
+                <option value="160">Papel 160 cm</option>
+              </select>
+            </label>
+            <label>
+              Solicitud
+              <select id="sublimationRequest">
+                <option value="solo_impresion">Solo impresion de papel</option>
+                <option value="sublimacion_piezas">Impresion y sublimacion por piezas</option>
+                <option value="sublimacion_rollo">Impresion y sublimacion por rollo</option>
+              </select>
+            </label>
+            <label>
+              Tela
+              <select id="fabricSource">
+                <option value="cliente">Cliente suministra tela</option>
+                <option value="taller">Nosotros suministramos tela</option>
+              </select>
+            </label>
+            <label>
+              Tipo de tela confirmado
+              <input id="fabricType" type="text" placeholder="Ej. poliester, licra, dry fit" />
+            </label>
+          </div>
+          <div id="epsonOptions" class="service-options" hidden>
+            <p class="service-note">Modo A4 vertical: 21 x 29.7 cm. La hoja crece por paginas completas para imprimir varias hojas en Epson F170.</p>
+            <label class="toggle-row">
+              <input id="a4MultiSheet" type="checkbox" checked />
+              Activar multi hojas A4
+            </label>
+            <label class="toggle-row">
+              <input id="mugNesting" type="checkbox" checked />
+              Nesting tazas: 3 disenos por hoja
+            </label>
+            <label class="toggle-row">
+              <input id="a4Mirror" type="checkbox" checked />
+              Espejo para sublimacion A4
+            </label>
+            <p class="service-note">La mesa se edita normal para acomodar facil. Al exportar PNG/PDF, cada hoja A4 sale invertida horizontalmente.</p>
+            <div class="field-grid">
+              <label>
+                Cantidad por diseno
+                <input id="mugDesignQty" type="number" min="1" max="200" value="1" />
+              </label>
+              <label>
+                Copias por hoja A4
+                <input id="a4SheetCopies" type="number" min="1" max="100" value="1" />
+              </label>
+            </div>
+            <label>
+              Perfil ICC de impresion
+              <input id="epsonIccProfile" type="text" value="EPSON_F100_BRILDOR_120_MAC_RIGID.icc" />
+            </label>
+            <a class="full-btn secondary" href="assets/icc/EPSON_F100_BRILDOR_120_MAC_RIGID.icc" download>
+              Descargar perfil ICC
+            </a>
+            <p class="service-note">Aplicar este perfil ICC al imprimir desde Photoshop, el driver o el flujo de color que uses para la Epson F170.</p>
+            <button id="mugPresetBtn" class="full-btn" type="button">Preset taza 20 x 9 cm / 300 DPI</button>
+            <button id="applyMugQtyBtn" class="full-btn secondary" type="button">Aplicar cantidad al diseno</button>
+            <button id="a4NestBtn" class="full-btn secondary" type="button">Anidar tazas 3 por hoja</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Hoja</h2>
+          <div class="field-grid">
+            <label>
+              Ancho
+              <span class="input-unit">
+                <input id="sheetWidth" type="number" min="20" max="57" step="0.5" value="57" />
+                <span>cm</span>
+              </span>
+            </label>
+            <label>
+              Alto
+              <span class="input-unit">
+                <input id="sheetHeight" type="number" min="30" max="600" step="1" value="40" />
+                <span>cm</span>
+              </span>
+            </label>
+          </div>
+          <label class="range-field">
+            Zoom
+            <input id="zoom" type="range" min="5" max="35" value="18" />
+          </label>
+          <label class="toggle-row">
+            <input id="snapToggle" type="checkbox" checked />
+            Ajustar a cuadricula
+          </label>
+          <label class="range-field">
+            Separacion entre disenos
+            <span class="input-unit">
+              <input id="itemSpacing" type="number" min="0" max="5" step="0.1" value="0.5" />
+              <span>cm</span>
+            </span>
+          </label>
+          <div class="nesting-options">
+            <label>
+              Modo de acomodo
+              <select id="nestMode">
+                <option value="professional">Profesional por huecos</option>
+                <option value="rows">Filas rapidas</option>
+              </select>
+            </label>
+            <div class="field-grid">
+              <label>
+                Margen
+                <span class="input-unit">
+                  <input id="nestMargin" type="number" min="0" max="5" step="0.1" value="0.6" />
+                  <span>cm</span>
+                </span>
+              </label>
+              <label>
+                Prioridad
+                <select id="nestSort">
+                  <option value="area">Area mayor</option>
+                  <option value="height">Altura mayor</option>
+                  <option value="width">Ancho mayor</option>
+                  <option value="order">Orden subido</option>
+                </select>
+              </label>
+            </div>
+            <label class="toggle-row">
+              <input id="nestRotate" type="checkbox" checked />
+              Rotar automaticamente para ahorrar espacio
+            </label>
+            <label class="toggle-row">
+              <input id="nestCompact" type="checkbox" checked />
+              Compactar para usar menor altura
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Cliente</h2>
+          <label>
+            Nombre
+            <input id="customerName" type="text" placeholder="Nombre o negocio" />
+          </label>
+          <label class="range-field">
+            WhatsApp
+            <input id="customerPhone" type="tel" placeholder="Telefono" />
+          </label>
+          <label class="range-field">
+            Notas
+            <textarea id="customerNotes" rows="3" placeholder="Color de camiseta, urgencia, instrucciones"></textarea>
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2>Disenos</h2>
+          <label class="upload-box">
+            <input
+              id="fileInput"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml,application/pdf,.ai,.pdf,.psd,.svg"
+              multiple
+            />
+            <span class="upload-icon">+</span>
+            <span>Subir PNG, JPG, SVG, PDF, AI o PSD</span>
+          </label>
+          <p id="uploadNotice" class="notice" hidden></p>
+          <div class="tool-row" role="group" aria-label="Herramientas de diseno">
+            <button id="duplicateBtn" type="button" title="Duplicar seleccionado">Duplicar</button>
+            <button id="deleteBtn" type="button" title="Eliminar seleccionado">Eliminar</button>
+            <button id="cropBtn" type="button" title="Recortar bordes transparentes">Recortar</button>
+            <button id="rotateBtn" type="button">Girar</button>
+          </div>
+          <div class="field-grid">
+            <label>
+              Ancho pieza
+              <span class="input-unit">
+                <input id="itemWidth" type="number" min="1" max="57" step="0.5" value="10" />
+                <span>cm</span>
+              </span>
+            </label>
+            <label>
+              Cantidad
+              <input id="itemQty" type="number" min="1" max="200" step="1" value="1" />
+            </label>
+          </div>
+          <div class="tool-row" role="group" aria-label="Acciones de acomodo">
+            <button id="applySizeBtn" type="button">Aplicar</button>
+            <button id="autoArrangeBtn" type="button">Autoacomodar</button>
+          </div>
+        </section>
+
+        <section class="panel object-panel">
+          <h2>Control de piezas</h2>
+          <div class="tool-row compact-actions" role="group" aria-label="Acciones rapidas de piezas">
+            <button id="reviewBtn" type="button">Revisar</button>
+            <button id="centerSelectedBtn" type="button">Centrar</button>
+            <button id="fitHeightBtn" type="button">Ajustar alto</button>
+            <button id="clearSheetBtn" type="button">Limpiar hoja</button>
+          </div>
+          <div id="preflightList" class="preflight-list" aria-live="polite"></div>
+          <div id="itemList" class="item-list" aria-label="Lista de piezas"></div>
+        </section>
+
+        <section class="panel estimate-panel">
+          <h2>Pedido</h2>
+          <label>
+            Precio por cm lineal
+            <span class="input-unit">
+              <span>Q</span>
+              <input id="pricePerCm" type="number" min="0" step="0.01" value="2.50" />
+            </span>
+          </label>
+          <label class="range-field">
+            Resolucion de salida
+            <span class="input-unit">
+              <input id="exportDpi" type="number" min="72" max="300" step="1" value="150" />
+              <span>DPI</span>
+            </span>
+          </label>
+          <dl class="summary-list">
+            <div>
+              <dt>Altura usada</dt>
+              <dd id="usedHeight">0 cm</dd>
+            </div>
+            <div>
+              <dt>Piezas</dt>
+              <dd id="pieceCount">0</dd>
+            </div>
+            <div>
+              <dt>Total estimado</dt>
+              <dd id="totalPrice">Q0.00</dd>
+            </div>
+            <div>
+              <dt>Estado</dt>
+              <dd id="productionStatus">Vacio</dd>
+            </div>
+            <div>
+              <dt>Hojas A4</dt>
+              <dd id="sheetPages">-</dd>
+            </div>
+          </dl>
+          <div class="export-row">
+            <button id="exportPngBtn" class="primary-btn" type="button">PNG final</button>
+            <button id="exportPdfBtn" class="primary-btn alt" type="button">PDF para RasterLink</button>
+            <button id="exportOrderBtn" type="button">Orden del pedido</button>
+            <button id="copyOrderBtn" type="button">Copiar resumen</button>
+            <button id="whatsappOrderBtn" type="button">Enviar por WhatsApp</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="workspace" aria-label="Area de trabajo">
+        <header class="topbar">
+          <div>
+            <p id="selectedInfo">Sin seleccion</p>
+            <strong id="sheetInfo">57 x 40 cm</strong>
+          </div>
+          <div class="legend">
+            <span><i class="grid-dot"></i> margen seguro 0.6 cm</span>
+            <span><i class="cut-dot"></i> area de impresion</span>
+          </div>
+        </header>
+        <nav class="editor-toolbar" aria-label="Barra de herramientas">
+          <button id="toolUndoBtn" type="button" title="Deshacer">↶</button>
+          <button id="toolRedoBtn" type="button" title="Rehacer">↷</button>
+          <button id="toolUploadBtn" type="button" title="Cargar imagen">＋</button>
+          <button id="toolTextBtn" type="button" title="Agregar texto">T</button>
+          <button id="toolCropBtn" type="button" title="Recortar">⌗</button>
+          <button id="toolRotateBtn" type="button" title="Girar">⟳</button>
+          <button id="toolDuplicateBtn" type="button" title="Duplicar">⧉</button>
+          <button id="toolDeleteBtn" type="button" title="Eliminar">⌫</button>
+          <button id="toolAutoBtn" class="toolbar-command" type="button">Anidar hojas</button>
+          <label class="toolbar-check">
+            <input id="marginToggle" type="checkbox" checked />
+            Margen
+          </label>
+          <label class="toolbar-field">
+            Espacio
+            <input id="toolbarSpacing" type="number" min="0" max="5" step="0.1" value="0.5" />
+            cm
+          </label>
+          <label class="toolbar-field">
+            Zoom
+            <input id="toolbarZoom" type="number" min="5" max="300" step="1" value="100" />
+            %
+          </label>
+        </nav>
+        <div class="work-area">
+          <div class="canvas-wrap">
+            <div class="ruler-shell">
+              <div class="ruler-corner" aria-hidden="true"></div>
+              <div id="horizontalRuler" class="ruler ruler-horizontal" aria-hidden="true"></div>
+              <div id="verticalRuler" class="ruler ruler-vertical" aria-hidden="true"></div>
+              <div class="canvas-stage">
+                <canvas id="builderCanvas" width="900" height="1400" aria-label="Lienzo de gang sheet"></canvas>
+                <div id="emptyState" class="empty-state">
+                  <strong>Sube tus disenos</strong>
+                  <span>Arrastra, acomoda y descarga el archivo final para impresion.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="text-builder" aria-label="Propiedades de texto">
+            <h2>Texto</h2>
+            <section class="names-panel" aria-label="Nombres y numeros">
+              <h2>Nombres y numeros</h2>
+              <details id="namesDetails" class="roster-section" open>
+                <summary>
+                  <strong><span id="namesCountLabel">(0) NAMES</span></strong>
+                  <span><i id="namesColorChip" class="color-chip"></i><span id="namesSummary">Small (1 in) - Academy</span></span>
+                </summary>
+                <div class="roster-controls">
+                  <label>
+                    Tamano
+                    <select id="namesSize">
+                      <option value="2.54">Small (1 in)</option>
+                      <option value="5.08">Medium (2 in)</option>
+                      <option value="7.62">Large (3 in)</option>
+                    </select>
+                  </label>
+                  <label>
+                    Fuente
+                    <select id="namesFont">
+                      <option value="Impact, Haettenschweiler, sans-serif">Academy</option>
+                      <option value="Arial Black, Arial, sans-serif">Block</option>
+                      <option value="Georgia, serif">College</option>
+                      <option value="'Trebuchet MS', sans-serif">Sport</option>
+                    </select>
+                  </label>
+                  <label>
+                    Ancho del trazo
+                    <input id="namesStrokeWidth" type="range" min="0" max="20" value="6" />
+                  </label>
+                  <div class="color-tabs">
+                    <label class="toggle-row">
+                      <input id="namesUseTextColor" type="checkbox" checked />
+                      Color del texto
+                    </label>
+                    <label class="toggle-row">
+                      <input id="namesUseStroke" type="checkbox" checked />
+                      Trazo
+                    </label>
+                  </div>
+                  <div class="color-control-grid">
+                    <label>
+                      Color texto
+                      <span class="color-row">
+                        <input id="namesTextColorHex" type="text" value="#000000" />
+                        <input id="namesTextColor" type="color" value="#000000" />
+                      </span>
+                    </label>
+                    <label>
+                      Color trazo
+                      <span class="color-row">
+                        <input id="namesStrokeColorHex" type="text" value="#ffffff" />
+                        <input id="namesStrokeColor" type="color" value="#ffffff" />
+                      </span>
+                    </label>
+                  </div>
+                  <div class="swatch-row" data-target="namesTextColorHex">
+                    <button type="button" data-color="#000000" style="--swatch:#000000"></button>
+                    <button type="button" data-color="#ffffff" style="--swatch:#ffffff"></button>
+                    <button type="button" data-color="#d9001b" style="--swatch:#d9001b"></button>
+                    <button type="button" data-color="#149be6" style="--swatch:#149be6"></button>
+                    <button type="button" data-color="#f5b21b" style="--swatch:#f5b21b"></button>
+                    <button type="button" data-color="#19b85f" style="--swatch:#19b85f"></button>
+                  </div>
+                  <div class="roster-entry-grid">
+                    <label>
+                      Names
+                      <input id="namesEntryText" type="text" placeholder="Ej. EDUARDO" />
+                    </label>
+                    <label>
+                      Cantidad
+                      <input id="namesEntryQty" type="number" min="1" max="99" value="1" />
+                    </label>
+                  </div>
+                  <button id="addNameEntryBtn" class="full-btn" type="button">Agregar nombres</button>
+                </div>
+              </details>
+
+              <details id="numbersDetails" class="roster-section">
+                <summary>
+                  <strong><span id="numbersCountLabel">(0) NUMBERS</span></strong>
+                  <span><i id="numbersColorChip" class="color-chip"></i><span id="numbersSummary">Small (4 in) - Academy</span></span>
+                </summary>
+                <div class="roster-controls">
+                  <label>
+                    Tamano
+                    <select id="numbersSize">
+                      <option value="10.16">Small (4 in)</option>
+                      <option value="15.24">Medium (6 in)</option>
+                      <option value="20.32">Large (8 in)</option>
+                      <option value="25.4">XL (10 in)</option>
+                    </select>
+                  </label>
+                  <label>
+                    Fuente
+                    <select id="numbersFont">
+                      <option value="Impact, Haettenschweiler, sans-serif">Academy</option>
+                      <option value="Arial Black, Arial, sans-serif">Block</option>
+                      <option value="Georgia, serif">College</option>
+                      <option value="'Trebuchet MS', sans-serif">Sport</option>
+                    </select>
+                  </label>
+                  <label>
+                    Ancho del trazo
+                    <input id="numbersStrokeWidth" type="range" min="0" max="20" value="6" />
+                  </label>
+                  <div class="color-tabs">
+                    <label class="toggle-row">
+                      <input id="numbersUseTextColor" type="checkbox" checked />
+                      Color del texto
+                    </label>
+                    <label class="toggle-row">
+                      <input id="numbersUseStroke" type="checkbox" checked />
+                      Trazo
+                    </label>
+                  </div>
+                  <div class="color-control-grid">
+                    <label>
+                      Color texto
+                      <span class="color-row">
+                        <input id="numbersTextColorHex" type="text" value="#000000" />
+                        <input id="numbersTextColor" type="color" value="#000000" />
+                      </span>
+                    </label>
+                    <label>
+                      Color trazo
+                      <span class="color-row">
+                        <input id="numbersStrokeColorHex" type="text" value="#ffffff" />
+                        <input id="numbersStrokeColor" type="color" value="#ffffff" />
+                      </span>
+                    </label>
+                  </div>
+                  <div class="swatch-row" data-target="numbersTextColorHex">
+                    <button type="button" data-color="#000000" style="--swatch:#000000"></button>
+                    <button type="button" data-color="#ffffff" style="--swatch:#ffffff"></button>
+                    <button type="button" data-color="#d9001b" style="--swatch:#d9001b"></button>
+                    <button type="button" data-color="#149be6" style="--swatch:#149be6"></button>
+                    <button type="button" data-color="#f5b21b" style="--swatch:#f5b21b"></button>
+                    <button type="button" data-color="#19b85f" style="--swatch:#19b85f"></button>
+                  </div>
+                  <div class="roster-entry-grid">
+                    <label>
+                      Numbers
+                      <input id="numbersEntryText" type="text" placeholder="Ej. 10" />
+                    </label>
+                    <label>
+                      Cantidad
+                      <input id="numbersEntryQty" type="number" min="1" max="99" value="1" />
+                    </label>
+                  </div>
+                  <button id="addNumberEntryBtn" class="full-btn" type="button">Agregar numeros</button>
+                </div>
+              </details>
+            </section>
+
+            <label>
+              Campo de texto
+              <textarea id="textInput" rows="4" placeholder="Escribe, selecciona, copia o pega el texto"></textarea>
+            </label>
+            <div class="field-grid object-grid">
+              <label>
+                Ancho
+                <span class="input-unit">
+                  <input id="textWidth" type="number" min="1" max="160" step="0.1" value="18" />
+                  <span>cm</span>
+                </span>
+              </label>
+              <label>
+                Altura
+                <span class="input-unit">
+                  <input id="textObjectHeight" type="number" min="1" max="60" step="0.1" value="5" />
+                  <span>cm</span>
+                </span>
+              </label>
+              <label>
+                X-Pos
+                <span class="input-unit">
+                  <input id="textX" type="number" min="0" step="0.1" value="0.6" />
+                  <span>cm</span>
+                </span>
+              </label>
+              <label>
+                Y-Pos
+                <span class="input-unit">
+                  <input id="textY" type="number" min="0" step="0.1" value="0.6" />
+                  <span>cm</span>
+                </span>
+              </label>
+            </div>
+            <div class="object-mini-row">
+              <label class="toggle-row">
+                <input id="lockTextRatio" type="checkbox" checked />
+                Proporcion
+              </label>
+              <span class="quality-pill">PPP 300 GOOD</span>
+            </div>
+            <div class="tool-row">
+              <button id="textDuplicateBtn" type="button">Duplicar</button>
+              <button id="textQuantityBtn" type="button">Agregar cantidad</button>
+            </div>
+            <label>
+              Familia de fuentes
+              <select id="textFontFamily">
+                <option value="Arial, Helvetica, sans-serif">Arial</option>
+                <option value="Impact, Haettenschweiler, sans-serif">Impact</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+                <option value="'Courier New', monospace">Courier</option>
+              </select>
+            </label>
+            <div class="field-grid">
+              <label>
+                Tamano
+                <input id="textFontSize" type="number" min="8" max="400" step="1" value="120" />
+              </label>
+              <label>
+                Color de texto
+                <span class="color-row">
+                  <input id="textColorHex" type="text" value="#000000" />
+                  <input id="textColor" type="color" value="#000000" />
+                </span>
+              </label>
+            </div>
+            <div class="field-grid">
+              <label class="toggle-row">
+                <input id="textStrokeEnabled" type="checkbox" />
+                Trazo
+              </label>
+              <label>
+                Ancho trazo
+                <input id="textStrokeWidth" type="range" min="0" max="20" value="0" />
+              </label>
+            </div>
+            <label>
+              Color de trazo
+              <span class="color-row">
+                <input id="textStrokeColorHex" type="text" value="#ffffff" />
+                <input id="textStrokeColor" type="color" value="#ffffff" />
+              </span>
+            </label>
+            <div class="text-style-row" aria-label="Estilos de texto">
+              <button id="textBoldBtn" type="button" title="Negrita">B</button>
+              <button id="textUnderlineBtn" type="button" title="Subrayado">U</button>
+              <button id="textStrikeBtn" type="button" title="Tachado">S</button>
+              <button id="textItalicBtn" type="button" title="Cursiva">I</button>
+              <button id="textUpperBtn" type="button" title="Mayusculas">AA</button>
+              <button id="textLowerBtn" type="button" title="Minusculas">Aa</button>
+              <button id="textAlignLeftBtn" type="button" title="Alinear izquierda">≡</button>
+              <button id="textAlignCenterBtn" type="button" title="Centrar">≣</button>
+              <button id="textAlignRightBtn" type="button" title="Alinear derecha">≡</button>
+            </div>
+            <button id="addTextBtn" type="button">Agregar campo de texto</button>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
