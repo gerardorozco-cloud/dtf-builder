@@ -11,6 +11,8 @@ Incluye:
 - Preset para tazas de 20 x 9 cm a 300 DPI.
 - Exportacion PNG transparente y PDF.
 - Panel de nombres y numeros.
+- Flujo por pasos: Trabajo, Mesa de trabajo y Exportar.
+- Pantalla de exportacion con datos del cliente, resumen, pedido y WhatsApp.
 
 ## Archivos principales
 

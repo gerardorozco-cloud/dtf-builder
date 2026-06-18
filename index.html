@@ -39,6 +39,21 @@
     </section>
 
     <main class="app-shell">
+      <nav class="flow-nav" aria-label="Flujo del pedido">
+        <button class="flow-step is-active" type="button" data-flow-page="job">
+          <span>1</span>
+          Trabajo
+        </button>
+        <button class="flow-step" type="button" data-flow-page="work">
+          <span>2</span>
+          Mesa
+        </button>
+        <button class="flow-step" type="button" data-flow-page="export">
+          <span>3</span>
+          Exportar
+        </button>
+      </nav>
+
       <aside class="sidebar" aria-label="Panel de configuracion">
         <section class="brand-block">
           <div>
@@ -48,7 +63,7 @@
           <span class="status-pill">Listo</span>
         </section>
 
-        <section class="panel">
+        <section id="servicePanel" class="panel" data-flow-section="job">
           <h2>Servicio</h2>
           <label>
             Tipo de trabajo
@@ -58,6 +73,27 @@
               <option value="epson_a4">Sublimacion A4 - Epson F170</option>
             </select>
           </label>
+          <div class="service-cards" role="group" aria-label="Seleccion rapida de servicio">
+            <button class="service-card is-active" type="button" data-service-choice="dtf">
+              <strong>DTF</strong>
+              <span>57 cm Mimaki</span>
+            </button>
+            <button class="service-card" type="button" data-service-choice="sublimation">
+              <strong>Sublimacion</strong>
+              <span>TS100 rollo</span>
+            </button>
+            <button class="service-card" type="button" data-service-choice="epson_a4">
+              <strong>A4</strong>
+              <span>Epson F170</span>
+            </button>
+          </div>
+          <div id="dtfOptions" class="service-options">
+            <p class="service-note">Modo DTF: ancho fijo 57 cm para Mimaki TxF300. Usa autoacomodar para reducir desperdicio antes de exportar.</p>
+            <div class="tool-row service-action-row" role="group" aria-label="Herramientas DTF">
+              <button id="dtfAutoBtn" type="button">Autoacomodar DTF</button>
+              <button id="dtfCropBtn" type="button">Recortar bordes</button>
+            </div>
+          </div>
           <div id="sublimationOptions" class="service-options" hidden>
             <label>
               Papel
@@ -115,10 +151,17 @@
             <button id="applyMugQtyBtn" class="full-btn secondary" type="button">Aplicar cantidad al diseno</button>
             <button id="a4NestBtn" class="full-btn secondary" type="button">Anidar tazas 3 por hoja</button>
           </div>
+          <div class="flow-actions">
+            <button id="goWorkBtn" class="primary-btn" type="button">Ir a mesa de trabajo</button>
+          </div>
         </section>
 
-        <section class="panel">
-          <h2>Hoja</h2>
+        <details id="sheetPanel" class="panel sidebar-details" data-flow-section="work">
+          <summary>
+            <h2>Hoja</h2>
+            <span>Medidas y acomodo</span>
+          </summary>
+          <div class="panel-body">
           <div class="field-grid">
             <label>
               Ancho
@@ -150,7 +193,9 @@
               <span>cm</span>
             </span>
           </label>
-          <div class="nesting-options">
+          <details id="nestingDetails" class="mini-details">
+            <summary>Opciones avanzadas de acomodo</summary>
+            <div class="nesting-options">
             <label>
               Modo de acomodo
               <select id="nestMode">
@@ -184,11 +229,17 @@
               <input id="nestCompact" type="checkbox" checked />
               Compactar para usar menor altura
             </label>
+            </div>
+          </details>
           </div>
-        </section>
+        </details>
 
-        <section class="panel">
-          <h2>Cliente</h2>
+        <details id="customerPanel" class="panel sidebar-details" data-flow-section="export">
+          <summary>
+            <h2>Cliente</h2>
+            <span>Datos del pedido</span>
+          </summary>
+          <div class="panel-body">
           <label>
             Nombre
             <input id="customerName" type="text" placeholder="Nombre o negocio" />
@@ -201,10 +252,15 @@
             Notas
             <textarea id="customerNotes" rows="3" placeholder="Color de camiseta, urgencia, instrucciones"></textarea>
           </label>
-        </section>
+          </div>
+        </details>
 
-        <section class="panel">
-          <h2>Disenos</h2>
+        <details id="designPanel" class="panel sidebar-details" data-flow-section="work" open>
+          <summary>
+            <h2>Disenos</h2>
+            <span>Subir y repetir</span>
+          </summary>
+          <div class="panel-body">
           <label class="upload-box">
             <input
               id="fileInput"
@@ -239,10 +295,15 @@
             <button id="applySizeBtn" type="button">Aplicar</button>
             <button id="autoArrangeBtn" type="button">Autoacomodar</button>
           </div>
-        </section>
+          </div>
+        </details>
 
-        <section class="panel object-panel">
-          <h2>Control de piezas</h2>
+        <details id="piecePanel" class="panel sidebar-details object-panel" data-flow-section="work">
+          <summary>
+            <h2>Control</h2>
+            <span>Revisar piezas</span>
+          </summary>
+          <div class="panel-body">
           <div class="tool-row compact-actions" role="group" aria-label="Acciones rapidas de piezas">
             <button id="reviewBtn" type="button">Revisar</button>
             <button id="centerSelectedBtn" type="button">Centrar</button>
@@ -251,10 +312,15 @@
           </div>
           <div id="preflightList" class="preflight-list" aria-live="polite"></div>
           <div id="itemList" class="item-list" aria-label="Lista de piezas"></div>
-        </section>
+          </div>
+        </details>
 
-        <section class="panel estimate-panel">
-          <h2>Pedido</h2>
+        <details id="orderPanel" class="panel sidebar-details estimate-panel" data-flow-section="export">
+          <summary>
+            <h2>Pedido</h2>
+            <span>Resumen y exportar</span>
+          </summary>
+          <div class="panel-body">
           <label>
             Precio por cm lineal
             <span class="input-unit">
@@ -292,51 +358,63 @@
             </div>
           </dl>
           <div class="export-row">
+            <button id="backToWorkBtn" type="button">Volver a mesa</button>
             <button id="exportPngBtn" class="primary-btn" type="button">PNG final</button>
             <button id="exportPdfBtn" class="primary-btn alt" type="button">PDF para RasterLink</button>
             <button id="exportOrderBtn" type="button">Orden del pedido</button>
             <button id="copyOrderBtn" type="button">Copiar resumen</button>
             <button id="whatsappOrderBtn" type="button">Enviar por WhatsApp</button>
           </div>
-        </section>
+          </div>
+        </details>
       </aside>
 
-      <section class="workspace" aria-label="Area de trabajo">
+      <section class="workspace" data-flow-section="work" aria-label="Area de trabajo">
         <header class="topbar">
           <div>
             <p id="selectedInfo">Sin seleccion</p>
             <strong id="sheetInfo">57 x 40 cm</strong>
+          </div>
+          <div class="workspace-actions">
+            <button id="directUploadTopBtn" type="button">Subir directo</button>
+            <button id="goExportBtn" type="button">Exportar pedido</button>
           </div>
           <div class="legend">
             <span><i class="grid-dot"></i> margen seguro 0.6 cm</span>
             <span><i class="cut-dot"></i> area de impresion</span>
           </div>
         </header>
-        <nav class="editor-toolbar" aria-label="Barra de herramientas">
-          <button id="toolUndoBtn" type="button" title="Deshacer">↶</button>
-          <button id="toolRedoBtn" type="button" title="Rehacer">↷</button>
-          <button id="toolUploadBtn" type="button" title="Cargar imagen">＋</button>
-          <button id="toolTextBtn" type="button" title="Agregar texto">T</button>
-          <button id="toolCropBtn" type="button" title="Recortar">⌗</button>
-          <button id="toolRotateBtn" type="button" title="Girar">⟳</button>
-          <button id="toolDuplicateBtn" type="button" title="Duplicar">⧉</button>
-          <button id="toolDeleteBtn" type="button" title="Eliminar">⌫</button>
-          <button id="toolAutoBtn" class="toolbar-command" type="button">Anidar hojas</button>
-          <label class="toolbar-check">
-            <input id="marginToggle" type="checkbox" checked />
-            Margen
-          </label>
-          <label class="toolbar-field">
-            Espacio
-            <input id="toolbarSpacing" type="number" min="0" max="5" step="0.1" value="0.5" />
-            cm
-          </label>
-          <label class="toolbar-field">
-            Zoom
-            <input id="toolbarZoom" type="number" min="5" max="300" step="1" value="100" />
-            %
-          </label>
-        </nav>
+        <details id="toolbarPanel" class="editor-toolbar-panel">
+          <summary>
+            <strong>Herramientas rapidas</strong>
+            <span>Texto, recorte, giro, anidado y zoom</span>
+          </summary>
+          <nav class="editor-toolbar" aria-label="Barra de herramientas">
+            <button id="toolUndoBtn" type="button" title="Deshacer">↶</button>
+            <button id="toolRedoBtn" type="button" title="Rehacer">↷</button>
+            <button id="toolUploadBtn" type="button" title="Cargar imagen">＋</button>
+            <button id="toolTextBtn" type="button" title="Agregar texto">T</button>
+            <button id="toolCropBtn" type="button" title="Recortar">⌗</button>
+            <button id="toolRotateBtn" type="button" title="Girar">⟳</button>
+            <button id="toolDuplicateBtn" type="button" title="Duplicar">⧉</button>
+            <button id="toolDeleteBtn" type="button" title="Eliminar">⌫</button>
+            <button id="toolAutoBtn" class="toolbar-command" type="button">Anidar hojas</button>
+            <label class="toolbar-check">
+              <input id="marginToggle" type="checkbox" checked />
+              Margen
+            </label>
+            <label class="toolbar-field">
+              Espacio
+              <input id="toolbarSpacing" type="number" min="0" max="5" step="0.1" value="0.5" />
+              cm
+            </label>
+            <label class="toolbar-field">
+              Zoom
+              <input id="toolbarZoom" type="number" min="5" max="300" step="1" value="100" />
+              %
+            </label>
+          </nav>
+        </details>
         <div class="work-area">
           <div class="canvas-wrap">
             <div class="ruler-shell">
@@ -347,12 +425,18 @@
                 <canvas id="builderCanvas" width="900" height="1400" aria-label="Lienzo de gang sheet"></canvas>
                 <div id="emptyState" class="empty-state">
                   <strong>Sube tus disenos</strong>
-                  <span>Arrastra, acomoda y descarga el archivo final para impresion.</span>
+                  <span>Usa el panel Disenos o sube directo a esta mesa de trabajo.</span>
+                  <button id="directUploadBtn" type="button">Subir directo aqui</button>
                 </div>
               </div>
             </div>
           </div>
-          <aside class="text-builder" aria-label="Propiedades de texto">
+          <details id="textBuilderPanel" class="text-builder" aria-label="Propiedades de texto">
+            <summary>
+              <h2>Texto y nombres</h2>
+              <span>Campos editables</span>
+            </summary>
+            <div class="text-panel-body">
             <h2>Texto</h2>
             <section class="names-panel" aria-label="Nombres y numeros">
               <h2>Nombres y numeros</h2>
@@ -606,7 +690,8 @@
               <button id="textAlignRightBtn" type="button" title="Alinear derecha">≡</button>
             </div>
             <button id="addTextBtn" type="button">Agregar campo de texto</button>
-          </aside>
+            </div>
+          </details>
         </div>
       </section>
     </main>

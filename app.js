@@ -9,7 +9,16 @@ const els = {
   startEditBtn: document.querySelector("#startEditBtn"),
   startNamesBtn: document.querySelector("#startNamesBtn"),
   fileInput: document.querySelector("#fileInput"),
+  uploadBox: document.querySelector(".upload-box"),
+  directUploadBtn: document.querySelector("#directUploadBtn"),
+  directUploadTopBtn: document.querySelector("#directUploadTopBtn"),
+  flowBtns: [...document.querySelectorAll("[data-flow-page]")],
+  goWorkBtn: document.querySelector("#goWorkBtn"),
+  goExportBtn: document.querySelector("#goExportBtn"),
+  backToWorkBtn: document.querySelector("#backToWorkBtn"),
   serviceMode: document.querySelector("#serviceMode"),
+  serviceChoiceBtns: [...document.querySelectorAll("[data-service-choice]")],
+  dtfOptions: document.querySelector("#dtfOptions"),
   sublimationOptions: document.querySelector("#sublimationOptions"),
   epsonOptions: document.querySelector("#epsonOptions"),
   a4MultiSheet: document.querySelector("#a4MultiSheet"),
@@ -20,6 +29,8 @@ const els = {
   mugPresetBtn: document.querySelector("#mugPresetBtn"),
   applyMugQtyBtn: document.querySelector("#applyMugQtyBtn"),
   a4NestBtn: document.querySelector("#a4NestBtn"),
+  dtfAutoBtn: document.querySelector("#dtfAutoBtn"),
+  dtfCropBtn: document.querySelector("#dtfCropBtn"),
   paperWidth: document.querySelector("#paperWidth"),
   sublimationRequest: document.querySelector("#sublimationRequest"),
   fabricSource: document.querySelector("#fabricSource"),
@@ -51,6 +62,7 @@ const els = {
   customerName: document.querySelector("#customerName"),
   customerPhone: document.querySelector("#customerPhone"),
   customerNotes: document.querySelector("#customerNotes"),
+  textBuilderPanel: document.querySelector("#textBuilderPanel"),
   textInput: document.querySelector("#textInput"),
   textWidth: document.querySelector("#textWidth"),
   textObjectHeight: document.querySelector("#textObjectHeight"),
@@ -115,6 +127,13 @@ const els = {
   centerSelectedBtn: document.querySelector("#centerSelectedBtn"),
   fitHeightBtn: document.querySelector("#fitHeightBtn"),
   clearSheetBtn: document.querySelector("#clearSheetBtn"),
+  toolbarPanel: document.querySelector("#toolbarPanel"),
+  sheetPanel: document.querySelector("#sheetPanel"),
+  customerPanel: document.querySelector("#customerPanel"),
+  designPanel: document.querySelector("#designPanel"),
+  piecePanel: document.querySelector("#piecePanel"),
+  orderPanel: document.querySelector("#orderPanel"),
+  nestingDetails: document.querySelector("#nestingDetails"),
   preflightList: document.querySelector("#preflightList"),
   itemList: document.querySelector("#itemList"),
   pricePerCm: document.querySelector("#pricePerCm"),
@@ -138,6 +157,7 @@ const els = {
   productionStatus: document.querySelector("#productionStatus"),
   sheetPages: document.querySelector("#sheetPages"),
   emptyState: document.querySelector("#emptyState"),
+  canvasWrap: document.querySelector(".canvas-wrap"),
   uploadNotice: document.querySelector("#uploadNotice"),
 };
 
@@ -152,7 +172,9 @@ const state = {
   restoring: false,
   activePoint: null,
   uploadMode: "auto",
+  pendingUploadMode: null,
   mugPresetActive: false,
+  flowPage: "job",
 };
 
 const MIN_SHEET_HEIGHT = 40;
@@ -198,6 +220,10 @@ function serviceMode() {
   return els.serviceMode.value;
 }
 
+function isCompactLayout() {
+  return window.matchMedia("(max-width: 860px)").matches;
+}
+
 function isA4Mode() {
   return serviceMode() === "epson_a4";
 }
@@ -225,6 +251,71 @@ function a4SheetCopies() {
 function serviceLabel() {
   if (isA4Mode()) return "Sublimacion A4 - Epson F170";
   return serviceMode() === "sublimation" ? "Sublimacion" : "DTF";
+}
+
+function syncServiceChoices() {
+  document.body.dataset.service = serviceMode();
+  els.serviceChoiceBtns.forEach((button) => {
+    const active = button.dataset.serviceChoice === serviceMode();
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function tuneSidebarForMode() {
+  if (els.sheetPanel) els.sheetPanel.open = false;
+  if (els.customerPanel) els.customerPanel.open = false;
+  if (els.designPanel) els.designPanel.open = true;
+  if (els.piecePanel) els.piecePanel.open = false;
+  if (els.orderPanel) els.orderPanel.open = false;
+  if (els.toolbarPanel) els.toolbarPanel.open = false;
+  if (els.nestingDetails) els.nestingDetails.open = false;
+}
+
+function setFlowPage(page) {
+  const nextPage = ["job", "work", "export"].includes(page) ? page : "job";
+  state.flowPage = nextPage;
+  document.body.dataset.flowPage = nextPage;
+  els.flowBtns.forEach((button) => {
+    const active = button.dataset.flowPage === nextPage;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-current", active ? "step" : "false");
+  });
+
+  if (nextPage === "job") {
+    if (els.sheetPanel) els.sheetPanel.open = false;
+    if (els.designPanel) els.designPanel.open = false;
+    if (els.piecePanel) els.piecePanel.open = false;
+    if (els.customerPanel) els.customerPanel.open = false;
+    if (els.orderPanel) els.orderPanel.open = false;
+    if (els.toolbarPanel) els.toolbarPanel.open = false;
+    if (els.textBuilderPanel) els.textBuilderPanel.open = false;
+  }
+
+  if (nextPage === "work") {
+    if (els.sheetPanel) els.sheetPanel.open = false;
+    if (els.designPanel) els.designPanel.open = true;
+    if (els.piecePanel) els.piecePanel.open = false;
+    if (els.customerPanel) els.customerPanel.open = false;
+    if (els.orderPanel) els.orderPanel.open = false;
+    if (els.toolbarPanel) els.toolbarPanel.open = false;
+    if (els.textBuilderPanel) els.textBuilderPanel.open = false;
+    render();
+  }
+
+  if (nextPage === "export") {
+    if (els.sheetPanel) els.sheetPanel.open = false;
+    if (els.designPanel) els.designPanel.open = false;
+    if (els.piecePanel) els.piecePanel.open = false;
+    if (els.customerPanel) els.customerPanel.open = true;
+    if (els.orderPanel) els.orderPanel.open = true;
+    if (els.toolbarPanel) els.toolbarPanel.open = false;
+    if (els.textBuilderPanel) els.textBuilderPanel.open = false;
+    renderPreflight(true);
+    render();
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function defaultZoomForService() {
@@ -650,6 +741,8 @@ function updateSummary() {
   } else {
     els.sheetPages.textContent = "-";
   }
+  const sheetPagesRow = els.sheetPages.closest("div");
+  if (sheetPagesRow) sheetPagesRow.hidden = !isA4Mode();
   renderItemList();
   renderPreflight();
   updateRosterSummary();
@@ -843,6 +936,7 @@ function createTextItem() {
 
 function addTextItem() {
   saveHistory();
+  if (els.textBuilderPanel) els.textBuilderPanel.open = true;
   const item = createTextItem();
   state.items.push(item);
   state.selectedId = item.id;
@@ -889,6 +983,7 @@ function updateSelectedText(record = true) {
 
 function loadTextControls(item) {
   if (item?.type !== "text") return;
+  if (els.textBuilderPanel) els.textBuilderPanel.open = true;
   els.textInput.value = item.text || "";
   els.textWidth.value = item.w.toFixed(1);
   els.textObjectHeight.value = item.h.toFixed(1);
@@ -989,6 +1084,7 @@ function addRosterEntries(kind) {
   }
   const qty = Math.max(1, Math.min(Number(cfg.qtyInput.value) || 1, 99));
   saveHistory();
+  if (els.textBuilderPanel) els.textBuilderPanel.open = true;
   values.forEach((value) => {
     const groupId = state.nextGroupId++;
     for (let i = 0; i < qty; i += 1) {
@@ -1087,23 +1183,24 @@ function placeholderToItem(file) {
   };
 }
 
-function addItemCopies(base, qty) {
+function addItemCopies(base, qty, mode = state.uploadMode) {
   saveHistory();
   for (let i = 0; i < qty; i += 1) {
     state.items.push({ ...base, id: state.nextId++, x: base.x + i * 0.6, y: base.y + i * 0.6 });
   }
   state.selectedId = state.items.at(-1).id;
-  if (state.uploadMode === "manual") {
+  if (mode === "manual") {
     expandSheetToContent();
     render();
   }
   else autoArrange(false);
 }
 
-function addFile(file) {
+function addFile(file, options = {}) {
   const qty = Math.max(1, Number(els.itemQty.value) || 1);
+  const mode = options.mode || state.uploadMode;
   if (!isRenderableFile(file)) {
-    addItemCopies(placeholderToItem(file), qty);
+    addItemCopies(placeholderToItem(file), qty, mode);
     showUploadNotice(`${file.name} se agrego al pedido, pero necesita conversion antes de exportar produccion.`);
     return;
   }
@@ -1111,13 +1208,28 @@ function addFile(file) {
   const image = new Image();
   image.onload = () => {
     const base = imageToItem(file, image);
-    addItemCopies(base, qty);
+    addItemCopies(base, qty, mode);
   };
   image.onerror = () => {
-    addItemCopies(placeholderToItem(file), qty);
+    addItemCopies(placeholderToItem(file), qty, mode);
     showUploadNotice(`${file.name} se agrego al pedido, pero no se pudo previsualizar en el navegador.`);
   };
   image.src = URL.createObjectURL(file);
+}
+
+function handleUploadFiles(fileList, options = {}) {
+  const files = [...fileList].filter(Boolean);
+  if (!files.length) return;
+  const mode = options.mode || (options.direct ? "manual" : state.uploadMode);
+  if (els.designPanel) els.designPanel.open = true;
+  els.uploadNotice.hidden = true;
+  files.forEach((file) => addFile(file, { mode }));
+}
+
+function openDirectUpload() {
+  state.pendingUploadMode = "manual";
+  els.fileInput.multiple = true;
+  els.fileInput.click();
 }
 
 function showUploadNotice(message) {
@@ -1464,10 +1576,40 @@ function horizontalOverlap(a, b, gap) {
 }
 
 els.fileInput.addEventListener("change", (event) => {
-  els.uploadNotice.hidden = true;
-  [...event.target.files].forEach(addFile);
+  handleUploadFiles(event.target.files, { mode: state.pendingUploadMode || state.uploadMode });
+  state.pendingUploadMode = null;
   event.target.value = "";
   els.fileInput.multiple = true;
+});
+
+els.directUploadBtn.addEventListener("click", openDirectUpload);
+els.directUploadTopBtn.addEventListener("click", openDirectUpload);
+els.uploadBox.addEventListener("click", () => {
+  state.pendingUploadMode = null;
+});
+
+els.flowBtns.forEach((button) => {
+  button.addEventListener("click", () => setFlowPage(button.dataset.flowPage));
+});
+els.goWorkBtn.addEventListener("click", () => setFlowPage("work"));
+els.goExportBtn.addEventListener("click", () => setFlowPage("export"));
+els.backToWorkBtn.addEventListener("click", () => setFlowPage("work"));
+
+["dragenter", "dragover"].forEach((eventName) => {
+  els.canvasWrap.addEventListener(eventName, (event) => {
+    if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+    event.preventDefault();
+    els.canvasWrap.classList.add("is-dragging");
+  });
+});
+
+["dragleave", "drop"].forEach((eventName) => {
+  els.canvasWrap.addEventListener(eventName, (event) => {
+    if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+    event.preventDefault();
+    els.canvasWrap.classList.remove("is-dragging");
+    if (eventName === "drop") handleUploadFiles(event.dataTransfer.files, { mode: "manual" });
+  });
 });
 
 els.itemList.addEventListener("click", (event) => {
@@ -1542,19 +1684,26 @@ els.startAutoBtn.addEventListener("click", () => {
   els.nestCompact.checked = true;
   els.fileInput.multiple = true;
   closeStartModal();
+  setFlowPage("work");
   els.fileInput.click();
 });
 els.startManualBtn.addEventListener("click", () => {
   state.uploadMode = "manual";
   els.fileInput.multiple = false;
   closeStartModal();
+  setFlowPage("work");
   els.fileInput.click();
 });
 els.startEditBtn.addEventListener("click", () => {
-  if (restoreDraft()) closeStartModal();
+  if (restoreDraft()) {
+    closeStartModal();
+    setFlowPage("work");
+  }
 });
 els.startNamesBtn.addEventListener("click", () => {
   closeStartModal();
+  setFlowPage("work");
+  if (els.textBuilderPanel) els.textBuilderPanel.open = true;
   els.namesDetails.open = true;
   els.numbersDetails.open = false;
   els.namesEntryText.focus();
@@ -2024,6 +2173,8 @@ function selectedText(select) {
 
 function applyServiceSettings() {
   const width = configuredPrintWidth();
+  syncServiceChoices();
+  els.dtfOptions.hidden = serviceMode() !== "dtf";
   els.sublimationOptions.hidden = serviceMode() !== "sublimation";
   els.epsonOptions.hidden = !isA4Mode();
   els.sheetWidth.max = String(width);
@@ -2047,6 +2198,7 @@ function applyServiceSettings() {
   if (serviceMode() === "dtf" && Number(els.zoom.value) < 10) {
     els.zoom.value = "18";
   }
+  tuneSidebarForMode();
   state.items.forEach(clampItem);
   render();
 }
@@ -2084,7 +2236,10 @@ els.toolbarZoom.addEventListener("input", () => {
 
 els.toolUndoBtn.addEventListener("click", undo);
 els.toolRedoBtn.addEventListener("click", redo);
-els.toolUploadBtn.addEventListener("click", () => els.fileInput.click());
+els.toolUploadBtn.addEventListener("click", () => {
+  state.pendingUploadMode = null;
+  els.fileInput.click();
+});
 els.toolTextBtn.addEventListener("click", addTextItem);
 els.toolCropBtn.addEventListener("click", () => els.cropBtn.click());
 els.toolRotateBtn.addEventListener("click", () => els.rotateBtn.click());
@@ -2095,6 +2250,16 @@ els.toolAutoBtn.addEventListener("click", () => autoArrange(true));
 [els.serviceMode, els.paperWidth].forEach((input) => {
   input.addEventListener("change", applyServiceSettings);
 });
+
+els.serviceChoiceBtns.forEach((button) => {
+  button.addEventListener("click", () => {
+    els.serviceMode.value = button.dataset.serviceChoice;
+    applyServiceSettings();
+  });
+});
+
+els.dtfAutoBtn.addEventListener("click", () => autoArrange(true));
+els.dtfCropBtn.addEventListener("click", () => els.cropBtn.click());
 
 [els.sublimationRequest, els.fabricSource, els.fabricType].forEach((input) => {
   input.addEventListener("input", render);
@@ -2296,4 +2461,5 @@ function assemblePdf(objects) {
   return pdf;
 }
 
-render();
+applyServiceSettings();
+setFlowPage("job");
