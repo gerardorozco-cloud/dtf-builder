@@ -17,7 +17,6 @@ const els = {
   a4Mirror: document.querySelector("#a4Mirror"),
   mugDesignQty: document.querySelector("#mugDesignQty"),
   a4SheetCopies: document.querySelector("#a4SheetCopies"),
-  epsonIccProfile: document.querySelector("#epsonIccProfile"),
   mugPresetBtn: document.querySelector("#mugPresetBtn"),
   applyMugQtyBtn: document.querySelector("#applyMugQtyBtn"),
   a4NestBtn: document.querySelector("#a4NestBtn"),
@@ -1503,7 +1502,6 @@ els.mugDesignQty.addEventListener("input", () => {
 });
 els.a4Mirror.addEventListener("change", render);
 els.a4SheetCopies.addEventListener("input", render);
-els.epsonIccProfile.addEventListener("input", render);
 
 els.centerSelectedBtn.addEventListener("click", () => {
   const item = selectedItem();
@@ -2009,8 +2007,6 @@ function serviceDetails() {
       `Impresiones A4 totales: ${a4PageCount(sheet().height) * a4SheetCopies()}`,
       `Nesting tazas: ${els.mugNesting.checked ? `${MUGS_PER_A4} por hoja` : "Manual"}`,
       `Preset taza: ${MUG_WRAP_WIDTH_CM} x ${MUG_WRAP_HEIGHT_CM} cm a ${PRODUCTION_DPI} DPI`,
-      `Perfil ICC: ${els.epsonIccProfile.value.trim() || "EPSON_F100_BRILDOR_120_MAC_RIGID.icc"}`,
-      "Nota color: aplicar el perfil ICC en Photoshop/driver al imprimir.",
     ];
   }
   if (serviceMode() !== "sublimation") return [];

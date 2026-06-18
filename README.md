@@ -9,8 +9,6 @@ Incluye:
 - Sublimacion A4 Epson F170 con multi hojas A4.
 - Opcion de espejo para exportar PNG/PDF A4 listo para sublimacion.
 - Preset para tazas de 20 x 9 cm a 300 DPI.
-- Perfil ICC Epson predeterminado: `EPSON_F100_BRILDOR_120_MAC_RIGID.icc`.
-- Descarga del ICC incluida en `assets/icc/EPSON_F100_BRILDOR_120_MAC_RIGID.icc`.
 - Exportacion PNG transparente y PDF.
 - Panel de nombres y numeros.
 
@@ -19,7 +17,6 @@ Incluye:
 - `index.html`: interfaz de la herramienta.
 - `styles.css`: estilos blanco/celeste.
 - `app.js`: motor de carga, nesting, texto, nombres/numeros, exportacion PNG/PDF y orden.
-- `assets/icc/`: perfiles ICC incluidos para Epson.
 - `.nojekyll`: evita que GitHub Pages procese el sitio con Jekyll.
 
 ## Publicar en GitHub Pages
