@@ -16,6 +16,8 @@ const els = {
   goWorkBtn: document.querySelector("#goWorkBtn"),
   goExportBtn: document.querySelector("#goExportBtn"),
   backToWorkBtn: document.querySelector("#backToWorkBtn"),
+  servicePanel: document.querySelector("#servicePanel"),
+  serviceSummary: document.querySelector("#serviceSummary"),
   serviceMode: document.querySelector("#serviceMode"),
   serviceChoiceBtns: [...document.querySelectorAll("[data-service-choice]")],
   dtfOptions: document.querySelector("#dtfOptions"),
@@ -174,7 +176,7 @@ const state = {
   uploadMode: "auto",
   pendingUploadMode: null,
   mugPresetActive: false,
-  flowPage: "job",
+  flowPage: "work",
 };
 
 const MIN_SHEET_HEIGHT = 40;
@@ -255,6 +257,14 @@ function serviceLabel() {
 
 function syncServiceChoices() {
   document.body.dataset.service = serviceMode();
+  if (els.serviceSummary) {
+    const labels = {
+      dtf: "DTF 57 cm",
+      sublimation: `Rollo ${els.paperWidth.value} cm`,
+      epson_a4: "A4 Epson F170",
+    };
+    els.serviceSummary.textContent = labels[serviceMode()] || serviceLabel();
+  }
   els.serviceChoiceBtns.forEach((button) => {
     const active = button.dataset.serviceChoice === serviceMode();
     button.classList.toggle("is-active", active);
@@ -283,6 +293,7 @@ function setFlowPage(page) {
   });
 
   if (nextPage === "job") {
+    if (els.servicePanel) els.servicePanel.open = true;
     if (els.sheetPanel) els.sheetPanel.open = false;
     if (els.designPanel) els.designPanel.open = false;
     if (els.piecePanel) els.piecePanel.open = false;
@@ -293,6 +304,7 @@ function setFlowPage(page) {
   }
 
   if (nextPage === "work") {
+    if (els.servicePanel) els.servicePanel.open = false;
     if (els.sheetPanel) els.sheetPanel.open = false;
     if (els.designPanel) els.designPanel.open = true;
     if (els.piecePanel) els.piecePanel.open = false;
@@ -304,6 +316,7 @@ function setFlowPage(page) {
   }
 
   if (nextPage === "export") {
+    if (els.servicePanel) els.servicePanel.open = false;
     if (els.sheetPanel) els.sheetPanel.open = false;
     if (els.designPanel) els.designPanel.open = false;
     if (els.piecePanel) els.piecePanel.open = false;
@@ -2462,4 +2475,4 @@ function assemblePdf(objects) {
 }
 
 applyServiceSettings();
-setFlowPage("job");
+setFlowPage("work");

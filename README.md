@@ -12,6 +12,8 @@ Incluye:
 - Exportacion PNG transparente y PDF.
 - Panel de nombres y numeros.
 - Flujo por pasos: Trabajo, Mesa de trabajo y Exportar.
+- La herramienta abre directo en Mesa de trabajo con el panel Trabajo plegado.
+- Cada servicio muestra solo sus opciones: DTF, rollo TS100 o Epson A4.
 - Pantalla de exportacion con datos del cliente, resumen, pedido y WhatsApp.
 
 ## Archivos principales

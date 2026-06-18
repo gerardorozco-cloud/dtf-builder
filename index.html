@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <section id="startModal" class="start-modal" aria-label="Opciones iniciales">
+    <section id="startModal" class="start-modal" aria-label="Opciones iniciales" hidden>
       <div class="start-dialog">
         <header class="start-header">
           <h2>Bienvenido al builder</h2>
@@ -63,8 +63,12 @@
           <span class="status-pill">Listo</span>
         </section>
 
-        <section id="servicePanel" class="panel" data-flow-section="job">
-          <h2>Servicio</h2>
+        <details id="servicePanel" class="panel sidebar-details service-panel" data-flow-section="job work">
+          <summary>
+            <h2>Trabajo</h2>
+            <span id="serviceSummary">DTF 57 cm</span>
+          </summary>
+          <div class="panel-body service-panel-body">
           <label>
             Tipo de trabajo
             <select id="serviceMode">
@@ -154,7 +158,8 @@
           <div class="flow-actions">
             <button id="goWorkBtn" class="primary-btn" type="button">Ir a mesa de trabajo</button>
           </div>
-        </section>
+          </div>
+        </details>
 
         <details id="sheetPanel" class="panel sidebar-details" data-flow-section="work">
           <summary>

@@ -15,6 +15,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   overflow-x: hidden;
 }
@@ -51,12 +55,9 @@ body[data-flow-page="export"] .app-shell {
   justify-content: center;
 }
 
-body[data-flow-page="job"] [data-flow-section="work"],
-body[data-flow-page="job"] [data-flow-section="export"],
-body[data-flow-page="work"] [data-flow-section="job"],
-body[data-flow-page="work"] [data-flow-section="export"],
-body[data-flow-page="export"] [data-flow-section="job"],
-body[data-flow-page="export"] [data-flow-section="work"] {
+body[data-flow-page="job"] [data-flow-section]:not([data-flow-section~="job"]),
+body[data-flow-page="work"] [data-flow-section]:not([data-flow-section~="work"]),
+body[data-flow-page="export"] [data-flow-section]:not([data-flow-section~="export"]) {
   display: none;
 }
 
@@ -196,6 +197,10 @@ h2 {
   display: grid;
   gap: 8px;
   margin-top: 14px;
+}
+
+body[data-flow-page="work"] .flow-actions {
+  display: none;
 }
 
 .sidebar-details {
@@ -802,9 +807,26 @@ input[type="range"] {
 
 .service-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 8px;
   margin-top: 12px;
+}
+
+.service-panel-body {
+  padding-top: 0;
+}
+
+.service-panel .service-options {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fcff;
+}
+
+.service-panel .service-note {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .service-card {
