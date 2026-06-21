@@ -138,6 +138,12 @@ const els = {
   nestingDetails: document.querySelector("#nestingDetails"),
   preflightList: document.querySelector("#preflightList"),
   itemList: document.querySelector("#itemList"),
+  dtfPricingPanel: document.querySelector("#dtfPricingPanel"),
+  genericPricingPanel: document.querySelector("#genericPricingPanel"),
+  dtfRatePerMeter: document.querySelector("#dtfRatePerMeter"),
+  dtfUnderMeterSurcharge: document.querySelector("#dtfUnderMeterSurcharge"),
+  dtfCanvasMinimum: document.querySelector("#dtfCanvasMinimum"),
+  dtfCanvasFlex: document.querySelector("#dtfCanvasFlex"),
   pricePerCm: document.querySelector("#pricePerCm"),
   exportDpi: document.querySelector("#exportDpi"),
   duplicateBtn: document.querySelector("#duplicateBtn"),
@@ -153,14 +159,20 @@ const els = {
   whatsappOrderBtn: document.querySelector("#whatsappOrderBtn"),
   selectedInfo: document.querySelector("#selectedInfo"),
   sheetInfo: document.querySelector("#sheetInfo"),
+  instantQuoteTotal: document.querySelector("#instantQuoteTotal"),
+  instantQuoteDetail: document.querySelector("#instantQuoteDetail"),
   usedHeight: document.querySelector("#usedHeight"),
+  billableLength: document.querySelector("#billableLength"),
+  surchargeAmount: document.querySelector("#surchargeAmount"),
   pieceCount: document.querySelector("#pieceCount"),
   totalPrice: document.querySelector("#totalPrice"),
   productionStatus: document.querySelector("#productionStatus"),
+  sheetPagesLabel: document.querySelector("#sheetPagesLabel"),
   sheetPages: document.querySelector("#sheetPages"),
   emptyState: document.querySelector("#emptyState"),
   canvasWrap: document.querySelector(".canvas-wrap"),
   uploadNotice: document.querySelector("#uploadNotice"),
+  workspaceNotice: document.querySelector("#workspaceNotice"),
 };
 
 const state = {
@@ -177,10 +189,12 @@ const state = {
   pendingUploadMode: null,
   mugPresetActive: false,
   flowPage: "work",
+  nestingWarning: "",
 };
 
 const MIN_SHEET_HEIGHT = 40;
-const MAX_SHEET_HEIGHT = 600;
+const MAX_SHEET_HEIGHT = 5000;
+const MAX_CANVAS_DIMENSION = 30000;
 const AUTO_HEIGHT_PADDING = 1.2;
 const A4_WIDTH_CM = 21;
 const A4_HEIGHT_CM = 29.7;
@@ -206,10 +220,15 @@ function sheet() {
   if (Number(els.sheetHeight.value) !== height) {
     els.sheetHeight.value = formatCm(height);
   }
+  const requestedZoom = Number(els.zoom.value) || 18;
+  const safeZoom = Math.max(5, Math.min(requestedZoom, Math.floor(MAX_CANVAS_DIMENSION / Math.max(height, 1))));
+  if (Number(els.zoom.value) !== safeZoom) {
+    els.zoom.value = String(safeZoom);
+  }
   return {
     width,
     height,
-    zoom: Number(els.zoom.value) || 18,
+    zoom: safeZoom,
   };
 }
 
@@ -253,6 +272,95 @@ function a4SheetCopies() {
 function serviceLabel() {
   if (isA4Mode()) return "Sublimacion A4 - Epson F170";
   return serviceMode() === "sublimation" ? "Sublimacion" : "DTF";
+}
+
+function rawUsedHeight() {
+  return state.items.reduce((max, item) => Math.max(max, item.y + item.h), 0);
+}
+
+function printableUsedHeight(s = sheet()) {
+  return Math.min(rawUsedHeight(), s.height);
+}
+
+function dtfCanvasSettings() {
+  return {
+    minimumCm: Math.max(50, Math.min(Number(els.dtfCanvasMinimum.value) || 100, 150)),
+    flexCm: Math.max(0, Math.min(Number(els.dtfCanvasFlex.value) || 0, 30)),
+  };
+}
+
+function dtfCanvasPlan(usedCm = printableUsedHeight()) {
+  const safeUsedCm = Math.max(0, usedCm);
+  const { minimumCm, flexCm } = dtfCanvasSettings();
+  if (!safeUsedCm) {
+    return {
+      count: 0,
+      sections: [],
+      minimumCm,
+      flexCm,
+      usedCm: 0,
+      billableCm: 0,
+      billableMeters: 0,
+      label: "Sin lienzos",
+    };
+  }
+
+  const maxCanvasCm = minimumCm + flexCm;
+  const count = Math.max(1, Math.ceil(safeUsedCm / maxCanvasCm));
+  const sections = Array.from({ length: count }, () => minimumCm);
+  let extraCm = Math.max(0, safeUsedCm - count * minimumCm);
+  for (let index = sections.length - 1; index >= 0 && extraCm > 0; index -= 1) {
+    const add = Math.min(flexCm, extraCm);
+    sections[index] += add;
+    extraCm -= add;
+  }
+  const billableCm = sections.reduce((sum, value) => sum + value, 0);
+  const compactSections = sections.map((value) => `${formatCm(value)} cm`).join(" + ");
+  return {
+    count,
+    sections,
+    minimumCm,
+    flexCm,
+    usedCm: safeUsedCm,
+    billableCm,
+    billableMeters: billableCm / 100,
+    label: `${count} lienzo(s): ${compactSections}`,
+  };
+}
+
+function pricingDetails(usedCm = printableUsedHeight()) {
+  const safeUsedCm = Math.max(0, usedCm);
+  const usedMeters = safeUsedCm / 100;
+  if (serviceMode() === "dtf") {
+    const meterRate = Math.max(0, Number(els.dtfRatePerMeter.value) || 0);
+    const plan = dtfCanvasPlan(safeUsedCm);
+    const surcharge = safeUsedCm > 0 && safeUsedCm < plan.minimumCm
+      ? Math.max(0, Number(els.dtfUnderMeterSurcharge.value) || 0)
+      : 0;
+    const base = plan.billableMeters * meterRate;
+    return {
+      base,
+      meters: plan.billableMeters,
+      usedMeters,
+      plan,
+      surcharge,
+      total: base + surcharge,
+      detail: safeUsedCm
+        ? `${plan.count} lienzo(s) / ${plan.billableMeters.toFixed(2)} m x ${formatMoney(meterRate)}/m${surcharge ? ` + ${formatMoney(surcharge)} recargo` : ""}`
+        : `DTF ${formatMoney(meterRate)}/m`,
+    };
+  }
+  const ratePerCm = Math.max(0, Number(els.pricePerCm.value) || 0);
+  const base = safeUsedCm * ratePerCm;
+  return {
+    base,
+    meters: usedMeters,
+    usedMeters,
+    plan: null,
+    surcharge: 0,
+    total: base,
+    detail: safeUsedCm ? `${safeUsedCm.toFixed(1)} cm x ${formatMoney(ratePerCm)}/cm` : `Q${ratePerCm.toFixed(2)}/cm`,
+  };
 }
 
 function syncServiceChoices() {
@@ -676,6 +784,11 @@ function saveDraft() {
     sheetWidth: els.sheetWidth.value,
     sheetHeight: els.sheetHeight.value,
     serviceMode: els.serviceMode.value,
+    dtfRatePerMeter: els.dtfRatePerMeter.value,
+    dtfUnderMeterSurcharge: els.dtfUnderMeterSurcharge.value,
+    dtfCanvasMinimum: els.dtfCanvasMinimum.value,
+    dtfCanvasFlex: els.dtfCanvasFlex.value,
+    pricePerCm: els.pricePerCm.value,
     savedAt: new Date().toISOString(),
   };
   localStorage.setItem("printBuilderDraft", JSON.stringify(draft));
@@ -700,6 +813,11 @@ function restoreDraft() {
   els.sheetWidth.value = draft.sheetWidth || els.sheetWidth.value;
   els.sheetHeight.value = draft.sheetHeight || els.sheetHeight.value;
   els.serviceMode.value = draft.serviceMode || els.serviceMode.value;
+  els.dtfRatePerMeter.value = draft.dtfRatePerMeter || els.dtfRatePerMeter.value;
+  els.dtfUnderMeterSurcharge.value = draft.dtfUnderMeterSurcharge || els.dtfUnderMeterSurcharge.value;
+  els.dtfCanvasMinimum.value = draft.dtfCanvasMinimum || els.dtfCanvasMinimum.value;
+  els.dtfCanvasFlex.value = draft.dtfCanvasFlex || els.dtfCanvasFlex.value;
+  els.pricePerCm.value = draft.pricePerCm || els.pricePerCm.value;
   state.restoring = false;
   applyServiceSettings();
   render();
@@ -740,22 +858,30 @@ function updateSummary() {
     : "Sin seleccion";
   els.emptyState.hidden = state.items.length > 0;
 
-  const used = state.items.reduce((max, item) => Math.max(max, item.y + item.h), 0);
-  const printableUsed = Math.min(used, sheet().height);
-  const price = printableUsed * (Number(els.pricePerCm.value) || 0);
+  const printableUsed = printableUsedHeight();
+  const pricing = pricingDetails(printableUsed);
   els.usedHeight.textContent = `${printableUsed.toFixed(1)} cm`;
+  els.billableLength.textContent = `${pricing.meters.toFixed(2)} m`;
+  els.surchargeAmount.textContent = formatMoney(pricing.surcharge);
   els.pieceCount.textContent = String(state.items.length);
-  els.totalPrice.textContent = formatMoney(price);
+  els.totalPrice.textContent = formatMoney(pricing.total);
+  els.instantQuoteTotal.textContent = formatMoney(pricing.total);
+  els.instantQuoteDetail.textContent = pricing.detail;
   els.productionStatus.textContent = productionStatusText();
   if (isA4Mode()) {
     const pages = a4PageCount(sheet().height);
     const copies = a4SheetCopies();
+    if (els.sheetPagesLabel) els.sheetPagesLabel.textContent = "Hojas A4";
     els.sheetPages.textContent = `${pages} hoja(s) x ${copies} = ${pages * copies}`;
+  } else if (serviceMode() === "dtf") {
+    if (els.sheetPagesLabel) els.sheetPagesLabel.textContent = "Lienzos DTF";
+    els.sheetPages.textContent = pricing.plan?.label || "Sin lienzos";
   } else {
-    els.sheetPages.textContent = "-";
+    if (els.sheetPagesLabel) els.sheetPagesLabel.textContent = "Alto hoja";
+    els.sheetPages.textContent = `${sheet().height.toFixed(1)} cm`;
   }
   const sheetPagesRow = els.sheetPages.closest("div");
-  if (sheetPagesRow) sheetPagesRow.hidden = !isA4Mode();
+  if (sheetPagesRow) sheetPagesRow.hidden = !state.items.length;
   renderItemList();
   renderPreflight();
   updateRosterSummary();
@@ -763,6 +889,20 @@ function updateSummary() {
 
 function formatMoney(value) {
   return `Q${value.toFixed(2)}`;
+}
+
+function showWorkspaceNotice(message, level = "warn") {
+  if (!els.workspaceNotice) return;
+  els.workspaceNotice.textContent = message;
+  els.workspaceNotice.dataset.level = level;
+  els.workspaceNotice.hidden = false;
+}
+
+function clearWorkspaceNotice() {
+  if (!els.workspaceNotice) return;
+  els.workspaceNotice.hidden = true;
+  els.workspaceNotice.textContent = "";
+  delete els.workspaceNotice.dataset.level;
 }
 
 function productionStatusText() {
@@ -864,12 +1004,13 @@ function reviewIssues() {
     issues.push({ level: "warn", text: "La hoja esta vacia." });
     return issues;
   }
+  let outOfBoundsCount = 0;
   state.items.forEach((item) => {
     if (item.requiresConversion) {
       issues.push({ level: "error", text: `${item.name} necesita conversion antes de producir.` });
     }
     if (isOutOfBounds(item)) {
-      issues.push({ level: "error", text: `${item.name} se sale del area de impresion.` });
+      outOfBoundsCount += 1;
     }
     if (item.type === "text" && item.fillEnabled === false && !item.strokeEnabled) {
       issues.push({ level: "error", text: `${item.name} no tiene color ni trazo visible.` });
@@ -881,6 +1022,9 @@ function reviewIssues() {
       issues.push({ level: "warn", text: `${item.name} esta debajo de 300 PPP: ${Math.round(dpi)} PPP.` });
     }
   });
+  if (outOfBoundsCount) {
+    issues.unshift({ level: "error", text: `${outOfBoundsCount} pieza(s) quedan fuera del area. La hoja puede crecer hasta ${MAX_SHEET_HEIGHT} cm de alto tecnico.` });
+  }
   if (needsFabricConfirmation()) {
     issues.push({ level: "error", text: "Falta confirmar tipo de tela para sublimacion." });
   }
@@ -1371,7 +1515,14 @@ function autoArrange(record = true) {
       : arrangeProfessional(s, options);
   fitSheetToContent();
   if (!arranged) {
-    window.alert("Algunas piezas no caben dentro del largo maximo de 600 cm. Reduce cantidad, ancho o separacion.");
+    const outside = state.items.filter(isOutOfBounds).length;
+    state.nestingWarning = `${outside || "Algunas"} pieza(s) quedan fuera del alto tecnico de ${MAX_SHEET_HEIGHT} cm. Reduce cantidad, ancho o separacion para que todo quepa en una sola hoja.`;
+    showWorkspaceNotice(state.nestingWarning);
+    if (els.piecePanel) els.piecePanel.open = true;
+    renderPreflight(true);
+  } else {
+    state.nestingWarning = "";
+    clearWorkspaceNotice();
   }
   render();
 }
@@ -2120,9 +2271,8 @@ function fileBaseName() {
 
 function orderSummary() {
   const s = sheet();
-  const used = state.items.reduce((max, item) => Math.max(max, item.y + item.h), 0);
-  const printableUsed = Math.min(used, s.height);
-  const price = printableUsed * (Number(els.pricePerCm.value) || 0);
+  const printableUsed = printableUsedHeight(s);
+  const pricing = pricingDetails(printableUsed);
   const issues = reviewIssues().filter((issue) => !(issue.level === "warn" && issue.text === "La hoja esta vacia."));
   const namesCount = state.items.filter((item) => item.rosterKind === "names").length;
   const numbersCount = state.items.filter((item) => item.rosterKind === "numbers").length;
@@ -2135,11 +2285,17 @@ function orderSummary() {
     ...serviceDetails(),
     `Hoja: ${s.width} x ${s.height} cm`,
     `Altura usada: ${printableUsed.toFixed(1)} cm`,
+    `Metros reales: ${pricing.usedMeters.toFixed(2)} m`,
+    ...(serviceMode() === "dtf" && pricing.plan ? [`Lienzos DTF: ${pricing.plan.label}`] : []),
+    `Metros a cobrar: ${pricing.meters.toFixed(2)} m`,
+    `Precio base: ${formatMoney(pricing.base)}`,
+    ...(pricing.surcharge ? [`Recargo menor a 1 m: ${formatMoney(pricing.surcharge)}`] : []),
     `Piezas: ${state.items.length}`,
     `Nombres: ${namesCount}`,
     `Numeros: ${numbersCount}`,
     `Estado: ${productionStatusText()}`,
-    `Total estimado: ${formatMoney(price)}`,
+    `Total estimado: ${formatMoney(pricing.total)}`,
+    "Nota precio: estimado sujeto a revision de archivo antes de imprimir.",
     `Revision: ${issues.length ? `${issues.length} aviso(s)` : "Sin avisos"}`,
     ...issues.map((issue) => `- ${issue.text}`),
     "",
@@ -2171,6 +2327,16 @@ function serviceDetails() {
       `Preset taza: ${MUG_WRAP_WIDTH_CM} x ${MUG_WRAP_HEIGHT_CM} cm a ${PRODUCTION_DPI} DPI`,
     ];
   }
+  if (serviceMode() === "dtf") {
+    const { minimumCm, flexCm } = dtfCanvasSettings();
+    return [
+      "Impresora: Mimaki TxF300",
+      "Ancho DTF: 57 cm",
+      `Precio DTF: ${formatMoney(Math.max(0, Number(els.dtfRatePerMeter.value) || 0))} por metro lineal`,
+      `Lienzo minimo: ${formatCm(minimumCm)} cm`,
+      `Flex extra por lienzo: ${formatCm(flexCm)} cm`,
+    ];
+  }
   if (serviceMode() !== "sublimation") return [];
   return [
     `Papel: ${els.paperWidth.value} cm`,
@@ -2190,6 +2356,8 @@ function applyServiceSettings() {
   els.dtfOptions.hidden = serviceMode() !== "dtf";
   els.sublimationOptions.hidden = serviceMode() !== "sublimation";
   els.epsonOptions.hidden = !isA4Mode();
+  els.dtfPricingPanel.hidden = serviceMode() !== "dtf";
+  els.genericPricingPanel.hidden = serviceMode() === "dtf";
   els.sheetWidth.max = String(width);
   els.sheetWidth.value = String(width);
   els.itemWidth.max = String(width);
@@ -2216,7 +2384,7 @@ function applyServiceSettings() {
   render();
 }
 
-[els.sheetWidth, els.sheetHeight, els.zoom, els.pricePerCm].forEach((input) => {
+[els.sheetWidth, els.sheetHeight, els.zoom, els.pricePerCm, els.dtfRatePerMeter, els.dtfUnderMeterSurcharge, els.dtfCanvasMinimum, els.dtfCanvasFlex].forEach((input) => {
   input.addEventListener("input", render);
 });
 

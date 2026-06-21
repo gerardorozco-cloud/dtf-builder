@@ -5,6 +5,7 @@ Herramienta web estatica para clientes de impresion DTF y sublimacion.
 Incluye:
 
 - DTF Mimaki TxF300 con ancho de 57 cm.
+- Precio DTF estimado: Q125 por metro lineal, lienzos de 1 metro minimo con flex extra configurable y recargo editable para trabajos menores de 1 metro.
 - Sublimacion Mimaki TS100 con papel 110 cm y 160 cm.
 - Sublimacion A4 Epson F170 con multi hojas A4.
 - Opcion de espejo para exportar PNG/PDF A4 listo para sublimacion.
@@ -15,6 +16,7 @@ Incluye:
 - La herramienta abre directo en Mesa de trabajo con el panel Trabajo plegado.
 - Cada servicio muestra solo sus opciones: DTF, rollo TS100 o Epson A4.
 - Pantalla de exportacion con datos del cliente, resumen, pedido y WhatsApp.
+- La hoja crece hacia el alto segun los disenos agregados, con aviso interno solo si supera el alto tecnico.
 
 ## Archivos principales
 

@@ -178,7 +178,7 @@
             <label>
               Alto
               <span class="input-unit">
-                <input id="sheetHeight" type="number" min="30" max="600" step="1" value="40" />
+                <input id="sheetHeight" type="number" min="30" max="5000" step="1" value="40" />
                 <span>cm</span>
               </span>
             </label>
@@ -326,7 +326,38 @@
             <span>Resumen y exportar</span>
           </summary>
           <div class="panel-body">
-          <label>
+          <div id="dtfPricingPanel" class="pricing-panel">
+            <label>
+              DTF por metro lineal
+              <span class="input-unit">
+                <span>Q</span>
+                <input id="dtfRatePerMeter" type="number" min="0" step="1" value="125" />
+              </span>
+            </label>
+            <label>
+              Recargo menor a 1 m
+              <span class="input-unit">
+                <span>Q</span>
+                <input id="dtfUnderMeterSurcharge" type="number" min="0" step="1" value="15" />
+              </span>
+            </label>
+            <label>
+              Lienzo minimo
+              <span class="input-unit">
+                <input id="dtfCanvasMinimum" type="number" min="50" max="150" step="1" value="100" />
+                <span>cm</span>
+              </span>
+            </label>
+            <label>
+              Flex extra
+              <span class="input-unit">
+                <input id="dtfCanvasFlex" type="number" min="0" max="30" step="1" value="5" />
+                <span>cm</span>
+              </span>
+            </label>
+            <p id="pricingNote" class="price-note">Forma lienzos de 1 m minimo y permite pasar unos cm segun el flex. Estimado sujeto a revision antes de imprimir.</p>
+          </div>
+          <label id="genericPricingPanel">
             Precio por cm lineal
             <span class="input-unit">
               <span>Q</span>
@@ -346,6 +377,14 @@
               <dd id="usedHeight">0 cm</dd>
             </div>
             <div>
+              <dt>Metros cobro</dt>
+              <dd id="billableLength">0.00 m</dd>
+            </div>
+            <div>
+              <dt>Recargo</dt>
+              <dd id="surchargeAmount">Q0.00</dd>
+            </div>
+            <div>
               <dt>Piezas</dt>
               <dd id="pieceCount">0</dd>
             </div>
@@ -358,7 +397,7 @@
               <dd id="productionStatus">Vacio</dd>
             </div>
             <div>
-              <dt>Hojas A4</dt>
+              <dt id="sheetPagesLabel">Hojas A4</dt>
               <dd id="sheetPages">-</dd>
             </div>
           </dl>
@@ -379,6 +418,11 @@
           <div>
             <p id="selectedInfo">Sin seleccion</p>
             <strong id="sheetInfo">57 x 40 cm</strong>
+          </div>
+          <div id="instantQuote" class="instant-quote" aria-live="polite">
+            <span>Estimado</span>
+            <strong id="instantQuoteTotal">Q0.00</strong>
+            <small id="instantQuoteDetail">DTF Q125/m</small>
           </div>
           <div class="workspace-actions">
             <button id="directUploadTopBtn" type="button">Subir directo</button>
@@ -420,6 +464,7 @@
             </label>
           </nav>
         </details>
+        <p id="workspaceNotice" class="workspace-notice" hidden></p>
         <div class="work-area">
           <div class="canvas-wrap">
             <div class="ruler-shell">
